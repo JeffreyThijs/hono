@@ -273,6 +273,13 @@ public final class LoraProtocolAdapter extends AbstractVertxBasedHttpProtocolAda
         } catch (final LoraProviderMalformedPayloadException e) {
             LOG.debug("error processing request from provider [name: {}]", provider.getProviderName(), e);
             TracingHelper.logError(currentSpan, "error processing request", e);
+            try {
+                final Buffer requestBody = ctx.getRoutingContext().body().buffer();
+                final JsonObject message = requestBody.toJsonObject();
+                currentSpan.log(Map.of("invalid payload", message.toString()));
+            } catch (final RuntimeException ignored) {
+
+            }
             currentSpan.finish();
             handle400(ctx.getRoutingContext(), ERROR_MSG_INVALID_PAYLOAD);
         }
